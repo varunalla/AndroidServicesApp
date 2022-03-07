@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">AndroidServicesApp</string>
+    <string name="pd_act_btn_name">Start Download</string>
+    <string name="pd_act_btn_name_downloading">Downloading&#8230;</string>
+    <string name="pd_act_lbl1">PDF 1 File Location</string>
+    <string name="pd_act_lbl2">PDF 2 File Location</string>
+    <string name="pd_act_lbl3">PDF 3 File Location</string>
+    <string name="pd_act_lbl4">PDF 4 File Location</string>
+    <string name="pd_act_lbl5">PDF 5 File Location</string>
+    <string name="pd_act_txt1">https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45530.pdf</string>
+    <string name="pd_act_txt2">https://hadoop.apache.org/docs/r1.2.1/hdfs_design.pdf</string>
+    <string name="pd_act_txt3">https://pages.databricks.com/rs/094-YMS-629/images/LearningSpark2.0.pdf</string>
+    <string name="pd_act_txt4">https://docs.aws.amazon.com/wellarchitected/latest/machine-learning-lens/wellarchitected-machine-learning-lens.pdf</string>
+    <string name="pd_act_txt5">https://developers.snowflake.com/wp-content/uploads/2020/09/SNO-eBook-7-Reference-Architectures-for-Application-Builders-MachineLearning-DataScience.pdf</string>
+    <string name="sdownload">Downloaded %1$s</string>
+    <string name="fdownload">Could not Download %1$s</string>
+    <string name="finaldownload">Download Done</string>
 </resources>
