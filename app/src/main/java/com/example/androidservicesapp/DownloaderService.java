@@ -3,6 +3,7 @@ package com.example.androidservicesapp;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Button;
@@ -16,17 +17,30 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class DownloaderService extends Service {
 
+    private final IBinder mBinder = new MessageBinder();
+    BoundServiceListener mListener;
+    ArrayList<String> urls=new ArrayList<>();
+    public class MessageBinder extends Binder {
 
+        public DownloaderService getService() {
+            return DownloaderService.this;
+        }
+        public void setListener(BoundServiceListener listener) {
+            mListener = listener;
+        }
+    }
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mBinder;
     }
 
     @Override
@@ -42,6 +56,7 @@ public class DownloaderService extends Service {
         Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show();
         if(intent!=null){
            ArrayList<URL> urls=(ArrayList<URL>) intent.getSerializableExtra("urls");
+           this.urls=new ArrayList<>();
            for(int i=0;i<urls.size();i++){
                new Thread(new FileDownloader(this.getBaseContext(),urls.get(i),i,this)).start();
                Toast.makeText(this, "Downloading "+urls.get(i).getPath(), Toast.LENGTH_SHORT).show();
@@ -52,12 +67,23 @@ public class DownloaderService extends Service {
 
     @Override 
     public  void onDestroy(){
+        this.urls=new ArrayList<>();
         Toast.makeText(this, "Download Stopped", Toast.LENGTH_SHORT).show();
     }
-    public void sendProgress(String message){
+    public void sendProgress(String message,int i){
         //Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 
         System.out.println(message);
+        urls.add(message);
+        if(mListener!=null){
+            mListener.sendProgress(message,i);
+        }
+        if(urls.size()==5){
+            if(mListener!=null){
+                mListener.finishedDownloading();
+            }
+        }
+
     }
 }
 
@@ -108,15 +134,15 @@ class FileDownloader implements Runnable{
                 }
                 fileOutput.close();
                 //Log.i("status","Downloaded File "+file.getName());
-                ds.sendProgress("Downloaded File "+file.getName());
+                ds.sendProgress("Downloaded File "+file.getName(),this.i);
             }
             else{
               //  Log.i("status","Could not downloaded File "+file.getName());
-                ds.sendProgress("Could not downloaded File "+file.getName());
+                ds.sendProgress("Could not downloaded File "+file.getName(),this.i);
             }
         } catch (IOException e) {
           //  Log.i("status","Failed to Download File ");
-            ds.sendProgress("Failed to Download File ");
+            ds.sendProgress("Failed to Download File ",this.i);
 
             e.printStackTrace();
         } catch (Exception e) {

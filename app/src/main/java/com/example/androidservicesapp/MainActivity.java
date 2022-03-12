@@ -2,12 +2,12 @@ package com.example.androidservicesapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
+import android.os.IBinder;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -15,18 +15,56 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
-    int requestCount=0;
-    boolean isRunning=false;
 
+    boolean isRunning=false;
+    boolean mBound=false;
+    private final ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            DownloaderService.MessageBinder binder = (DownloaderService.MessageBinder) service;
+            DownloaderService mService = binder.getService();
+            binder.setListener(new BoundServiceListener() {
+
+                @Override
+                public void sendProgress(String message,int fileNumber) {
+                    // Use this method to update our download progress
+                    runOnUiThread(()->{
+                        ProgressBar bar=(findViewById(R.id.progressBar));
+                        bar.setProgress(bar.getProgress()+20,true);
+                        Toast.makeText(mService, message, Toast.LENGTH_SHORT).show();
+                    });
+                }
+
+                @Override
+                public void finishedDownloading() {
+
+                    runOnUiThread(()->{
+                        Toast.makeText(mService, "Files Downloaded", Toast.LENGTH_SHORT).show();
+                        Button btn=(findViewById(R.id.button));
+                        btn.setText(R.string.pd_act_btn_name);
+                        stopCustomService();
+                        ProgressBar bar=(findViewById(R.id.progressBar));
+                        bar.setProgress(0,true);
+
+                        isRunning=false;
+                    });
+                }
+            });
+
+            mBound = true;
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,10 +152,13 @@ public class MainActivity extends AppCompatActivity {
             // potentially add data to the intent
             ArrayList<URL> urls=fetchUrls();
             i.putExtra("urls",urls);
-            //i.putExtra("KEY1", "Value to be used by the service");
             context.startService(i);
+            bindService(i, mConnection, Context.BIND_AUTO_CREATE);
+
             btn.setText(R.string.pd_act_btn_name_downloading);
-            //btn.setEnabled(false);
+
+            ProgressBar bar=(findViewById(R.id.progressBar));
+            bar.setProgress(0,true);
             isRunning=true;
         }
         else{
@@ -125,20 +166,11 @@ public class MainActivity extends AppCompatActivity {
             btn.setText(R.string.pd_act_btn_name);
             isRunning=false;
         }
-
-
-        /*
-        ProgressBar bar=(findViewById(R.id.progressBar));
-        bar.setProgress(0,true);
-        Button btn=(findViewById(R.id.button));
-        btn.setText(R.string.pd_act_btn_name_downloading);
-        btn.setEnabled(false);
-        EditText editText=(findViewById(R.id.status));
-        editText.setText("");
-        ArrayList<URL> urls=fetchUrls();
-        this.requestCount=0;
-        for(int i=0;i<urls.size();i++)
-            new Thread(new FileDownloader(urls.get(i),i+1)).start();*/
+    }
+    public void stopCustomService(){
+        Context context = getApplicationContext();
+        Intent i= new Intent(context, DownloaderService.class);
+        context.stopService(i);
     }
 
 }
