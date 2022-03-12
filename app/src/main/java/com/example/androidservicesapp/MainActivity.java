@@ -54,9 +54,6 @@ public class MainActivity extends AppCompatActivity {
                         Button btn=(findViewById(R.id.button));
                         btn.setText(R.string.pd_act_btn_name);
                         stopCustomService();
-                        ProgressBar bar=(findViewById(R.id.progressBar));
-                        bar.setProgress(0,true);
-
                         isRunning=false;
                     });
                 }
